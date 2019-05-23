@@ -9,16 +9,15 @@ const path = require('path');
 
 
 const { DATABASE_URL, TEST_DATABASE_URL, PORT } = require('../config.js');
-// TODO
-// const { setupRoutes } = require('./API/API.js');
+
+const { setupRoutes } = require('./API/API.js');
 
 const app = express();
 
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-// TODO
-// setupRoutes(app);
+setupRoutes(app);
 
 app.use('*', function (req, res) {
     res.status(404).json({ message: 'Route not handled: malformed URL or non-existing static resource'});
