@@ -10,12 +10,12 @@ const apiConfig = {
             users: UserModel
         }
     },
-    movies: {
-        router: moviesRouter,
-        models: {
-            movies: MovieModel
-        }
-    }
+    // movies: {
+    //     router: moviesRouter,
+    //     models: {
+    //         movies: MovieModel
+    //     }
+    // }
 }
 
 function setupRoutes(app) {
