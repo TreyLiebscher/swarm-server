@@ -24,6 +24,7 @@ HiveSchema.methods.serialize = function () {
         id: this._id,
         title: this.title,
         members: this.members,
+        posts: this.posts
     }
 }
 
