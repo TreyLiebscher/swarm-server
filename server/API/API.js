@@ -4,8 +4,8 @@ const HiveModel = require('./hives/hive.model');
 const hivesRouter = require('./hives/hive.router');
 const PostModel = require('./posts/post.model');
 const postsRouter = require('./posts/post.router');
-// const MovieModel = require('./movies/movie.model');
-// const moviesRouter = require('./movies/movie.router');
+const CommentModel = require('./comments/comment.model');
+const commentsRouter = require('./comments/comment.router');
 
 const apiConfig = {
     users: {
@@ -25,13 +25,13 @@ const apiConfig = {
         models: {
             posts: PostModel
         }
+    },
+    comments: {
+        router: commentsRouter,
+        models: {
+            comments: CommentModel
+        }
     }
-    // movies: {
-    //     router: moviesRouter,
-    //     models: {
-    //         movies: MovieModel
-    //     }
-    // }
 }
 
 function setupRoutes(app) {
