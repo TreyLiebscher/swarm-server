@@ -20,7 +20,8 @@ const UserSchema = new mongoose.Schema({
         required: true
     },
     comments: [{type : mongoose.Schema.ObjectId, ref : 'CommentModel'}],
-    posts: [{type : mongoose.Schema.ObjectId, ref : 'PostModel'}]
+    posts: [{type : mongoose.Schema.ObjectId, ref : 'PostModel'}],
+    hives: [{type : mongoose.Schema.ObjectId, ref : 'HiveModel'}]
 }, {
     timestamps: {
         createdAt: 'createdAt'
@@ -33,7 +34,8 @@ UserSchema.methods.serialize = function () {
         email: this.email,
         username: this.username,
         comments: this.comments,
-        posts: this.posts
+        posts: this.posts,
+        hives: this.hives
     }
 }
 
