@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const os = require('os');
 const path = require('path');
+const cors = require('cors');
 
 
 const { DATABASE_URL, TEST_DATABASE_URL, PORT } = require('../config.js');
@@ -16,6 +17,7 @@ const app = express();
 
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(cors());
 
 setupRoutes(app);
 
