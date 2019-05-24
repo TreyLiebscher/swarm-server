@@ -9,6 +9,10 @@ const CommentSchema = new mongoose.Schema({
         // TODO email not required, only for password recovery
         required: true
     },
+    author: {
+        type: String,
+        required: true
+    },
     user: [{type : mongoose.Schema.ObjectId, ref : 'UserModel'}]
 }, {
     timestamps: {
@@ -20,6 +24,7 @@ CommentSchema.methods.serialize = function () {
     return {
         id: this._id,
         body: this.body,
+        author: this.author,
         user: this.user,
     }
 }
