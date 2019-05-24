@@ -22,7 +22,7 @@ const PostSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    comments: [{type: mongoose.Schema.ObjectId, ref: 'PostModel'}]
+    comments: [{type: mongoose.Schema.ObjectId, ref: 'CommentModel'}]
 });
 
 PostSchema.methods.serialize = function () {
