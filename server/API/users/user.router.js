@@ -206,18 +206,19 @@ router.post('/changepassword', jwtAuth, tryCatch(changePassword));
 //------------------------------------------------------------------------------\\
 
 // GET - User Profile \\
-async function getUserProfile(req, res) {
-    const record = await UserModel.findOne({username: req.user.username})
-        .populate('movies').exec((err, movies) => {
-            res.json({profile: movies.serialize(),
-                preferences: movies.findMost()
-            })
-        });
+// TO DO - populate posts/comments 
+// async function getUserProfile(req, res) {
+//     const record = await UserModel.findOne({username: req.user.username})
+//         .populate('movies').exec((err, movies) => {
+//             res.json({profile: movies.serialize(),
+//                 preferences: movies.findMost()
+//             })
+//         });
     
-    console.log(record)
-}
+//     console.log(record)
+// }
 
-router.get('/profile/home', jwtAuth, tryCatch(getUserProfile));
+// router.get('/profile/home', jwtAuth, tryCatch(getUserProfile));
 //------------------------------------------------------------------------------\\
 
 
