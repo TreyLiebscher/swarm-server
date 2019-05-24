@@ -1,5 +1,9 @@
 const UserModel = require('./users/user.model');
 const usersRouter = require('./users/user.router');
+const HiveModel = require('./hives/hive.model');
+const hivesRouter = require('./hives/hive.router');
+const PostModel = require('./posts/post.model');
+const postsRouter = require('./posts/post.router');
 // const MovieModel = require('./movies/movie.model');
 // const moviesRouter = require('./movies/movie.router');
 
@@ -10,6 +14,18 @@ const apiConfig = {
             users: UserModel
         }
     },
+    hives: {
+        router: hivesRouter,
+        models: {
+            hives: HiveModel
+        }
+    },
+    posts: {
+        router: postsRouter,
+        models: {
+            posts: PostModel
+        }
+    }
     // movies: {
     //     router: moviesRouter,
     //     models: {
