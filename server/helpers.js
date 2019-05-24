@@ -16,16 +16,11 @@ function expressTryCatchWrapper(fn) {
 
 function getFieldsFromRequest(fieldNamesArr, req) {
     const requestFieldNames = Object.keys(req.body)
-
-    // new to reduce? 
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce    
+    
     return fieldNamesArr.reduce((acc, fieldName) => {
 
-        if (requestFieldNames.includes(fieldName)) { // is this field name present in the request?
+        if (requestFieldNames.includes(fieldName)) {
             const value = req.body[fieldName]
-
-            // is there an usable value? 
-            // if so, add it to the reduce() return object
             if (value !== undefined) {
                 acc[fieldName] = value
             } 
