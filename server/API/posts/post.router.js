@@ -13,6 +13,7 @@ const router = express.Router();
 // POST - Create a post within a Hive \\
 async function createPost(req, res){
     const targetHive = await HiveModel.findOne({_id: req.body.hive});
+    const postAuthor = await UserModel.findOne({_id: req.body.user});
 
     const memberValidation = targetHive.members.map((member) => {
         if(member._id == req.body.user){
@@ -35,7 +36,14 @@ async function createPost(req, res){
     }
 
     else {
-        let newPost = new PostModel(req.body);
+        let newPost = new PostModel({
+            author: postAuthor.username,
+            title: req.body.title,
+            link: req.body.link,
+            body: req.body.body,
+            image: req.body.image,
+            tags: req.body.tags
+        });
         newPost.save();
         UserModel.findById(req.body.user, function(err, user){
             user.posts.push(newPost);
@@ -80,5 +88,28 @@ async function viewPost(req, res){
 }
 
 router.get('/view', tryCatch(viewPost));
+
+// GET - Search for post by Tags \\
+async function findPost(req, res){
+    const foundPost = PostModel.find( { tags: { $in: [ req.body.tags ]}} );
+
+    if(foundPost === null){
+        return res.json({
+            message: 'No posts found'
+        });
+    }
+
+    else {
+        PostModel.find({tags: {$in: req.body.tags}})
+        .limit(15)
+        .exec(function(err, posts){
+            res.json({
+                feedback: posts.map((post) => post.quickView())
+            })
+        })
+    }
+}
+
+router.get('/find', tryCatch(findPost));
 
 module.exports = router;
