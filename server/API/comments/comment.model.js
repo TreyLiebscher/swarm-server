@@ -13,6 +13,7 @@ const CommentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    replies:[{type: mongoose.Schema.ObjectId, ref : 'CommentModel'}],
     user: [{type : mongoose.Schema.ObjectId, ref : 'UserModel'}]
 }, {
     timestamps: {
@@ -26,6 +27,7 @@ CommentSchema.methods.serialize = function () {
         body: this.body,
         author: this.author,
         user: this.user,
+        replies: this.replies
     }
 }
 
