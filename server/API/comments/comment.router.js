@@ -47,4 +47,64 @@ async function createComment(req, res){
 
 router.post('/create', tryCatch(createComment));
 
+// POST - Create a comment reply \\
+async function commentReply(req, res){
+    const targetComment = await CommentModel.findOne({_id: req.body.comment});
+    const commentAuthor = await UserModel.findOne({_id: req.body.user});
+
+    if(targetComment === null){
+        return res.json({
+            message: 'This comment does not exist'
+        });
+    }
+
+    else {
+        let newReply = new CommentModel({
+            post: req.body.post,
+            user: req.body.user,
+            body: req.body.body,
+            author: commentAuthor.username
+        })
+        newReply.save();
+
+        CommentModel.findById(req.body.comment, function(err, comment){
+            comment.replies.push(newReply);
+            comment.save(function(err) {
+                CommentModel.findById(req.body.comment)
+                .populate('replies')
+                .exec(function(err, comment){
+                    res.json({
+                        feedback: comment.serialize()
+                    })
+                })
+            })
+        })
+    }
+}
+
+router.post('/reply', tryCatch(commentReply));
+
+// GET - View a comment + replies \\
+async function viewComment(req, res){
+    const targetComment = CommentModel.findOne({_id: req.body.comment});
+
+    if(targetComment === null){
+        return res.json({
+            message: 'That comment does not exist'
+        });
+    }
+
+    else {
+        CommentModel.findById(req.body.comment)
+        .populate('replies')
+        .exec(function (err, comment) {
+            res.json({
+                feedback: comment.serialize()
+            })
+        })
+    }
+}
+
+router.get('/view', tryCatch(viewComment));
+
 module.exports = router;
