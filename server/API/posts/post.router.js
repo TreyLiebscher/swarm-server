@@ -93,6 +93,8 @@ router.get('/view', tryCatch(viewPost));
 // GET - Search for post by Tags \\
 async function findPost(req, res){
     const foundPost = PostModel.find( { tags: { $in: [ req.body.tags ]}} );
+    const pageResults = 10;
+    const page = req.params.page || 1;
 
     if(foundPost === null){
         return res.json({
@@ -101,11 +103,17 @@ async function findPost(req, res){
     }
 
     else {
+        const numOfPosts = await PostModel.count({tags: {$in: req.body.tags}});
         PostModel.find({tags: {$in: req.body.tags}})
-        .limit(15)
+        .populate({path:'hive', select:'title'})
+        .skip((pageResults * page) - pageResults)
+        .limit(pageResults)
         .exec(function(err, posts){
             res.json({
-                feedback: posts.map((post) => post.quickView())
+                posts: posts.map((post) => post.quickView()),
+                currentPage: page,
+                pages: Math.ceil(numOfPosts / pageResults),
+                totalPosts: numOfPosts
             })
         })
     }
