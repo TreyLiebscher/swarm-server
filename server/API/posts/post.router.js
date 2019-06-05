@@ -42,7 +42,8 @@ async function createPost(req, res){
             link: req.body.link,
             body: req.body.body,
             image: req.body.image,
-            tags: req.body.tags
+            tags: req.body.tags,
+            hive: req.body.hive
         });
         newPost.save();
         UserModel.findById(req.body.user, function(err, user){
@@ -69,7 +70,6 @@ router.post('/create', tryCatch(createPost));
 // GET - View a post \\
 async function viewPost(req, res){
     const targetPost = PostModel.findOne({_id: req.body.post});
-
     if(targetPost === null){
         return res.json({
             message: 'That post does not exist'
@@ -79,6 +79,7 @@ async function viewPost(req, res){
     else {
         PostModel.findById(req.body.post)
         .populate('comments')
+        .populate({path:'hive', select:'title'})
         .exec(function (err, post) {
             res.json({
                 feedback: post.serialize()
@@ -111,5 +112,35 @@ async function findPost(req, res){
 }
 
 router.get('/find', tryCatch(findPost));
+
+// GET - Posts + pagination \\
+async function browsePosts(req, res){
+    const pageResults = 10;
+    const page = req.params.page || 1;
+
+    if(page === null){
+        return res.json({
+            message: 'Page not found'
+        });
+    }
+
+    else {
+        const numOfPosts = await PostModel.count();
+        PostModel.find()
+        .populate({path:'hive', select:'title'})
+        .skip((pageResults * page) - pageResults)
+        .limit(pageResults)
+        .exec(function(err, posts){
+            res.json({
+                posts: posts.map((post) => post.quickView()),
+                currentPage: page,
+                pages: Math.ceil(numOfPosts / pageResults),
+                totalPosts: numOfPosts
+            });
+        })
+    }
+}
+
+router.get('/browse/:page', tryCatch(browsePosts));
 
 module.exports = router;
