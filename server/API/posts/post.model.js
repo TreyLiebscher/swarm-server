@@ -31,7 +31,12 @@ const PostSchema = new mongoose.Schema({
     },
     tags: [{type: String, required: false}],
     comments: [{type: mongoose.Schema.ObjectId, ref: 'CommentModel'}]
-});
+}, {
+    timestamps: {
+        createdAt: 'createdAt'
+    }
+}
+);
 
 PostSchema.methods.serialize = function () {
     return {
@@ -43,7 +48,8 @@ PostSchema.methods.serialize = function () {
         body: this.body,
         image: this.image,
         comments: this.comments,
-        tags: this.tags
+        tags: this.tags,
+        createdAt: this.createdAt
     }
 }
 
@@ -55,7 +61,8 @@ PostSchema.methods.quickView = function () {
         title: this.title,
         image: this.image,
         comments: this.comments.length,
-        tags: this.tags
+        tags: this.tags,
+        createdAt: this.createdAt
     }
 }
 
