@@ -10,6 +10,9 @@ const PostSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.ObjectId, ref: 'UserModel'
     },
+    hive: {
+        type: mongoose.Schema.ObjectId, ref: 'HiveModel'
+    },
     title: {
         type: String,
         required: true
@@ -33,6 +36,7 @@ const PostSchema = new mongoose.Schema({
 PostSchema.methods.serialize = function () {
     return {
         id: this._id,
+        hive: this.hive,
         author: this.author,
         title: this.title,
         link: this.link,
@@ -46,6 +50,7 @@ PostSchema.methods.serialize = function () {
 PostSchema.methods.quickView = function () {
     return {
         id: this._id,
+        hive: this.hive,
         author: this.author,
         title: this.title,
         image: this.image,
