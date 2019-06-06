@@ -69,7 +69,7 @@ router.post('/create', tryCatch(createPost));
 
 // GET - View a post \\
 async function viewPost(req, res){
-    const targetPost = PostModel.findOne({_id: req.body.post});
+    const targetPost = PostModel.findOne({_id: req.params.id});
     if(targetPost === null){
         return res.json({
             message: 'That post does not exist'
@@ -77,7 +77,7 @@ async function viewPost(req, res){
     }
 
     else {
-        PostModel.findById(req.body.post)
+        PostModel.findById(req.params.id)
         .populate('comments')
         .populate({path:'hive', select:'title'})
         .exec(function (err, post) {
@@ -88,7 +88,7 @@ async function viewPost(req, res){
     }
 }
 
-router.get('/view', tryCatch(viewPost));
+router.get('/view/:id', tryCatch(viewPost));
 
 // GET - Search for post by Tags \\
 async function findPost(req, res){
