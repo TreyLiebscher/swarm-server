@@ -119,7 +119,7 @@ async function findPost(req, res){
     }
 }
 
-router.get('/find', tryCatch(findPost));
+router.post('/find', tryCatch(findPost));
 
 // GET - Posts + pagination \\
 async function browsePosts(req, res){
