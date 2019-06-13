@@ -23,8 +23,19 @@ HiveSchema.methods.serialize = function () {
     return {
         id: this._id,
         title: this.title,
+        mission: this.mission,
         members: this.members,
         posts: this.posts
+    }
+}
+
+HiveSchema.methods.quickView = function () {
+    return {
+        id: this._id,
+        title: this.title,
+        mission: this.mission,
+        members: this.members.length,
+        posts: this.posts.length
     }
 }
 
