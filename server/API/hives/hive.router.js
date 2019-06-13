@@ -101,4 +101,26 @@ async function browseHives(req, res){
 
 router.get('/browse/:page', tryCatch(browseHives));
 
+// GET - View Single Hive \\
+async function viewHive(req, res){
+    const targetHive = HiveModel.findOne({_id: req.params.id});
+    if(targetHive === null){
+        return res.json({
+            message: 'That hive does not exist'
+        });
+    }
+
+    else {
+        HiveModel.findById(req.params.id)
+        .populate('posts')
+        .exec(function (err, hive) {
+            res.json({
+                feedback: hive.serialize()
+            })
+        })
+    }
+}
+
+router.get('/view/:id', tryCatch(viewHive));
+
 module.exports = router;
