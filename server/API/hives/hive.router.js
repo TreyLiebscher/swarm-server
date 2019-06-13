@@ -103,7 +103,7 @@ router.get('/browse/:page', tryCatch(browseHives));
 
 // GET - View Single Hive \\
 async function viewHive(req, res){
-    const targetHive = HiveModel.findOne({_id: req.params.id});
+    const targetHive = HiveModel.findOne({title: req.params.title});
     if(targetHive === null){
         return res.json({
             message: 'That hive does not exist'
@@ -111,7 +111,7 @@ async function viewHive(req, res){
     }
 
     else {
-        HiveModel.findById(req.params.id)
+        HiveModel.findOne({title: req.params.title})
         .populate('posts')
         .exec(function (err, hive) {
             res.json({
@@ -121,6 +121,6 @@ async function viewHive(req, res){
     }
 }
 
-router.get('/view/:id', tryCatch(viewHive));
+router.get('/view/:title', tryCatch(viewHive));
 
 module.exports = router;
