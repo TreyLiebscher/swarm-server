@@ -72,4 +72,33 @@ async function getHiveInfo(req, res){
 
 router.get('/search', tryCatch(getHiveInfo));
 
+// GET - Hives + pagination \\
+async function browseHives(req, res){
+    const pageResults = 10;
+    const page = req.params.page || 1;
+
+    if(page === null){
+        return res.json({
+            message: 'Page not found'
+        });
+    }
+
+    else {
+        const numOfHives = await HiveModel.count();
+        HiveModel.find()
+        .skip((pageResults * page) - pageResults)
+        .limit(pageResults)
+        .exec(function(err, hives){
+            res.json({
+                hives: hives.map((hive) => hive.quickView()),
+                currentPage: page,
+                pages: Math.ceil(numOfHives / pageResults),
+                totalHives: numOfHives
+            });
+        })
+    }
+}
+
+router.get('/browse/:page', tryCatch(browseHives));
+
 module.exports = router;
