@@ -104,6 +104,7 @@ router.get('/browse/:page', tryCatch(browseHives));
 // GET - View Single Hive \\
 async function viewHive(req, res){
     const targetHive = HiveModel.findOne({title: req.params.title});
+    console.log('KIWI', targetHive)
     if(targetHive === null){
         return res.json({
             message: 'That hive does not exist'
@@ -115,7 +116,7 @@ async function viewHive(req, res){
         .populate('posts')
         .exec(function (err, hive) {
             res.json({
-                feedback: hive.serialize()
+                feedback: hive
             })
         })
     }
