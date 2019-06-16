@@ -26,25 +26,25 @@ const jwtAuth = passport.authenticate('jwt', {
 
 async function buildHive(req, res){
     const existingHive = await HiveModel.findOne({title: req.body.title});
-
+    
     if (existingHive === null) {
         let hive = new HiveModel(req.body);
+
+        UserModel.findById(req.body.user, function(err, user) {
+            user.hives.push(hive);
+            user.save()
+        });
+
         hive.members.push(req.body.user);
         hive.save(function(err, hive) {
-            UserModel.findById(req.body.user, function(err, user) {
-                user.hives.push(hive);
-                user.save(function(err) {
-                    UserModel.findById(req.body.user)
-                    .populate('hives')
-                    .exec(function (err, hives) {
-                        res.json({
-                            userMemberships: hives.serialize()
-                        })
-                    })
-                })
+            res.json({
+                hive: hive.serialize()
             })
         })
-    } else {
+
+    }
+    
+    else {
         return res.json({
             message: 'A Hive with this name already exists, please choose another name'
         })
