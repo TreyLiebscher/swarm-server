@@ -46,7 +46,7 @@ async function buildHive(req, res){
         })
     } else {
         return res.json({
-            message: 'Sorry, but a Hive with this name already exists'
+            message: 'A Hive with this name already exists, please choose another name'
         })
     }
 }
