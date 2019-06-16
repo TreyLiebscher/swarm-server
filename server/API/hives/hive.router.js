@@ -88,6 +88,8 @@ async function browseHives(req, res){
         HiveModel.find()
         .skip((pageResults * page) - pageResults)
         .limit(pageResults)
+        .populate('posts')
+        .populate('members')
         .exec(function(err, hives){
             res.json({
                 hives: hives.map((hive) => hive.quickView()),
