@@ -216,6 +216,7 @@ async function getUserProfile(req, res) {
                 profile: user.serialize()
             })
         });
+        
 }
 
 router.get('/profile/home', jwtAuth, tryCatch(getUserProfile));
