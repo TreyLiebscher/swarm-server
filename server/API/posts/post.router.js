@@ -45,23 +45,27 @@ async function createPost(req, res){
             tags: req.body.tags,
             hive: req.body.hive
         });
-        newPost.save();
+
         UserModel.findById(req.body.user, function(err, user){
             user.posts.push(newPost);
             user.save();
         });
+
         HiveModel.findById(req.body.hive, function(err, hive){
             hive.posts.push(newPost);
-            hive.save(function(err) {
-                HiveModel.findById(req.body.hive)
-                .populate('posts')
-                .exec(function(err, hive) {
-                    res.json({
-                        userFeedback: hive.serialize()
-                    })
+            hive.save();
+        });
+
+        newPost.save(function(err, post) {
+            PostModel.findOne(post)
+            .populate('hive', 'title')
+            .populate('comments')
+            .exec(function(err, post) {
+                res.json({
+                    post: post.serialize()
                 })
             })
-        })
+        });
     }
 }
 
