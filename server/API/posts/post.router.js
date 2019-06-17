@@ -12,7 +12,7 @@ const router = express.Router();
 
 // POST - Create a post within a Hive \\
 async function createPost(req, res){
-    const targetHive = await HiveModel.findOne({_id: req.body.hive});
+    const targetHive = await HiveModel.findOne({_id: req.params.id});
     const postAuthor = await UserModel.findOne({_id: req.body.user});
 
     const memberValidation = targetHive.members.map((member) => {
@@ -43,7 +43,7 @@ async function createPost(req, res){
             body: req.body.body,
             image: req.body.image,
             tags: req.body.tags,
-            hive: req.body.hive
+            hive: req.params.id
         });
 
         UserModel.findById(req.body.user, function(err, user){
@@ -51,7 +51,7 @@ async function createPost(req, res){
             user.save();
         });
 
-        HiveModel.findById(req.body.hive, function(err, hive){
+        HiveModel.findById(req.params.id, function(err, hive){
             hive.posts.push(newPost);
             hive.save();
         });
@@ -69,7 +69,7 @@ async function createPost(req, res){
     }
 }
 
-router.post('/create', tryCatch(createPost));
+router.post('/create/:id', tryCatch(createPost));
 
 // GET - View a post \\
 async function viewPost(req, res){
