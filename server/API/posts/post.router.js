@@ -155,4 +155,50 @@ async function browsePosts(req, res){
 
 router.get('/browse/:page', tryCatch(browsePosts));
 
+// PUT - Rate Post \\
+async function ratePost(req, res) {
+    const existingRecord = await PostModel.findById(req.body.post)
+    const rater = await UserModel.findById(req.body.user);
+    let found;
+    const findRater = await existingRecord.raters.map((id) => {
+        if(id == rater.id){
+            found = true;
+        } else {
+            found = false;
+        }
+    });
+    if (existingRecord === null) {
+        return res.status(404).json({
+            message: 'NOT_FOUND'
+        })
+    }
+    if (found === true){
+        return res.json({
+            message: 'You have already rated this post'
+        });
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate({
+        '_id': req.body.user
+    }, {
+            $push: {ratedPosts: req.body.post}
+        }, {
+            new: true
+    });
+
+    const updatedRecord = await PostModel.findByIdAndUpdate({
+        '_id': req.body.post
+    }, {
+            $push: {ratings: req.body.rating, raters: req.body.user}
+        }, {
+            new: true
+        })
+    res.json({
+        post: updatedRecord.serialize(),
+        message: 'Post rated successfully'
+    })
+}
+
+router.put('/rate', tryCatch(ratePost));
+
 module.exports = router;
