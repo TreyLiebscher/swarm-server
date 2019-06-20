@@ -21,7 +21,8 @@ const UserSchema = new mongoose.Schema({
     },
     comments: [{type : mongoose.Schema.ObjectId, ref : 'CommentModel'}],
     posts: [{type : mongoose.Schema.ObjectId, ref : 'PostModel'}],
-    hives: [{type : mongoose.Schema.ObjectId, ref : 'HiveModel'}]
+    hives: [{type : mongoose.Schema.ObjectId, ref : 'HiveModel'}],
+    ratedPosts: [{type : mongoose.Schema.ObjectId, ref : 'PostModel'}]
 }, {
     timestamps: {
         createdAt: 'createdAt'
