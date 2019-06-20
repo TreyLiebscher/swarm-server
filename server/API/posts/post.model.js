@@ -29,6 +29,8 @@ const PostSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    ratings: [{type: Number, required: false}],
+    raters: [{type: mongoose.Schema.ObjectId, ref: 'UserModel'}],
     tags: [{type: String, required: false}],
     comments: [{type: mongoose.Schema.ObjectId, ref: 'CommentModel'}]
 }, {
@@ -49,6 +51,7 @@ PostSchema.methods.serialize = function () {
         image: this.image,
         comments: this.comments,
         tags: this.tags,
+        ratings: this.ratings,
         createdAt: this.createdAt
     }
 }
@@ -62,6 +65,7 @@ PostSchema.methods.quickView = function () {
         image: this.image,
         comments: this.comments.length,
         tags: this.tags,
+        ratings: this.ratings,
         createdAt: this.createdAt
     }
 }
