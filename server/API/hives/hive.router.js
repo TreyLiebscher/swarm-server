@@ -53,6 +53,32 @@ async function buildHive(req, res){
 
 router.post('/build', tryCatch(buildHive));
 
+async function joinHive(req, res){
+    const existingHive = await HiveModel.findOne({_id: req.body.hive});
+
+    if(existingHive === null){
+        return res.json({
+            message: 'This hive does not exist'
+        });
+    }
+
+    else {
+        UserModel.findById(req.body.user, function(err, user) {
+            user.hives.push(existingHive);
+            user.save();
+        });
+
+        existingHive.members.push(req.body.user);
+        existingHive.save(function(err, hive) {
+            res.json({
+                hive: hive.serialize()
+            })
+        });
+    }
+}
+
+router.post('/join', tryCatch(joinHive));
+
 async function getHiveInfo(req, res){
     const returnHive = await HiveModel.findOne({title: req.body.title});
     const user = req.body.user;
