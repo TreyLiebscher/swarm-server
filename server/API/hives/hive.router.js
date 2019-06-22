@@ -53,6 +53,7 @@ async function buildHive(req, res){
 
 router.post('/build', tryCatch(buildHive));
 
+// POST - Join Hive \\
 async function joinHive(req, res){
     const existingHive = await HiveModel.findOne({_id: req.body.hive});
 
@@ -78,6 +79,51 @@ async function joinHive(req, res){
 }
 
 router.post('/join', tryCatch(joinHive));
+
+// POST - Leave Hive \\
+async function leaveHive(req, res){
+    const existingHive = await HiveModel.findOne({_id: req.body.hive});
+
+    if(existingHive === null){
+        return res.json({
+            message: 'This hive does not exist'
+        });
+    }
+
+    else {
+        UserModel.findByIdAndUpdate(req.body.user,
+            {$pull: { hives: `${req.body.hive}`}},
+            {safe: true, upsert: true},
+            function(err, user) {
+                console.log('KIWI USER', user.hives)
+                user.save();
+            }
+        );
+
+        HiveModel.findByIdAndUpdate(req.body.hive,
+            {$pull: { members: `${req.body.user}`}},
+            {safe: true, upsert: true},
+            function(err, hive) {
+                if(err){
+                console.log(err);
+                res.json({
+                    success:false
+                    }).end();
+                }else{
+                    console.log(hive.members)
+                    hive.save();
+                    HiveModel.findById(req.body.hive, function(err, hive) {
+                        res.json({
+                            hive: hive.serialize()
+                        })
+                    })
+                }
+            }
+        );
+    }
+}
+
+router.post('/leave', tryCatch(leaveHive));
 
 async function getHiveInfo(req, res){
     const returnHive = await HiveModel.findOne({title: req.body.title});
