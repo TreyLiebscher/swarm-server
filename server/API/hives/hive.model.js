@@ -11,6 +11,8 @@ const HiveSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    founder:{type: mongoose.Schema.ObjectId, ref: 'UserModel'},
+    monitors: [{type : mongoose.Schema.ObjectId, ref : 'UserModel'}],
     posts: [{type: mongoose.Schema.ObjectId, ref: 'PostModel'}],
     members: [{type : mongoose.Schema.ObjectId, ref : 'UserModel'}]
 }, {
@@ -24,6 +26,8 @@ HiveSchema.methods.serialize = function () {
         id: this._id,
         title: this.title,
         mission: this.mission,
+        founder: this.founder,
+        monitors: this.monitors,
         members: this.members,
         posts: this.posts
     }
