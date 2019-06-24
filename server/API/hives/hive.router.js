@@ -24,11 +24,18 @@ const jwtAuth = passport.authenticate('jwt', {
     session: false
 });
 
+const HIVE_MODEL_FIELDS = ['title', 'mission'];
+
 async function buildHive(req, res){
     const existingHive = await HiveModel.findOne({title: req.body.title});
     
     if (existingHive === null) {
-        let hive = new HiveModel(req.body);
+        // let hive = new HiveModel(req.body);
+        let hive = new HiveModel({
+            title: req.body.title,
+            mission: req.body.mission,
+            founder: req.body.user
+        });
 
         UserModel.findById(req.body.user, function(err, user) {
             user.hives.push(hive);
@@ -36,6 +43,7 @@ async function buildHive(req, res){
         });
 
         hive.members.push(req.body.user);
+        hive.monitors.push(req.body.user);
         hive.save(function(err, hive) {
             res.json({
                 hive: hive.serialize()
@@ -62,7 +70,11 @@ async function joinHive(req, res){
             message: 'This hive does not exist'
         });
     }
-
+    else if (existingHive.members.includes(req.body.user)){
+        return res.json({
+            message: 'You are already a member of this hive'
+        });
+    }
     else {
         UserModel.findById(req.body.user, function(err, user) {
             user.hives.push(existingHive);
@@ -89,13 +101,16 @@ async function leaveHive(req, res){
             message: 'This hive does not exist'
         });
     }
-
+    else if (!(existingHive.members.includes(req.body.user))){
+        return res.json({
+            message: 'You are not a member of this hive'
+        });
+    }
     else {
         UserModel.findByIdAndUpdate(req.body.user,
             {$pull: { hives: `${req.body.hive}`}},
             {safe: true, upsert: true},
             function(err, user) {
-                console.log('KIWI USER', user.hives)
                 user.save();
             }
         );
@@ -178,7 +193,6 @@ router.get('/browse/:page', tryCatch(browseHives));
 // GET - View Single Hive \\
 async function viewHive(req, res){
     const targetHive = HiveModel.findOne({title: req.params.title});
-    console.log('KIWI', targetHive)
     if(targetHive === null){
         return res.json({
             message: 'That hive does not exist'
@@ -188,6 +202,7 @@ async function viewHive(req, res){
     else {
         HiveModel.findOne({title: req.params.title})
         .populate('posts')
+        .populate('founder', 'username')
         .exec(function (err, hive) {
             res.json({
                 feedback: hive
@@ -197,5 +212,38 @@ async function viewHive(req, res){
 }
 
 router.get('/view/:title', tryCatch(viewHive));
+
+// PUT - Update Hive \\
+async function updateHive(req, res){
+    const existingHive = await HiveModel.findById({_id: req.body.hive});
+    if(existingHive === null){
+        return res.status(404).json({
+            message: 'The hive you`re trying to update doesn`t exist'
+        });
+    }
+    else if (!(existingHive.monitors.includes(req.body.user))){
+        return res.status(404).json({
+            message: 'You are not authorized to perform this action'
+        });
+    }
+    else {
+        const newValues = getFields(HIVE_MODEL_FIELDS, req);
+
+        const updatedHive = await HiveModel.findByIdAndUpdate({
+            '_id': req.body.hive
+        }, {
+            $set: newValues
+        }, {
+            new: true
+        });
+    
+        res.json({
+            hive: updatedHive.serialize(),
+            message: 'Hive updated successfully'
+        })
+    }
+}
+
+router.put('/update', tryCatch(updateHive));
 
 module.exports = router;
