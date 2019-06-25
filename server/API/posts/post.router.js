@@ -201,7 +201,7 @@ async function ratePost(req, res) {
 
 router.put('/rate', tryCatch(ratePost));
 
-// GET - View a post \\
+// POST - View a post \\
 async function viewPostLimitComments(req, res){
     
     const targetPost = await PostModel.findOne({_id: req.params.id});
@@ -240,6 +240,6 @@ async function viewPostLimitComments(req, res){
     }
 }
 
-router.get('/test/:id', tryCatch(viewPostLimitComments));
+router.post('/test/:id', tryCatch(viewPostLimitComments));
 
 module.exports = router;
