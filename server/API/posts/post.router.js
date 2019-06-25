@@ -201,4 +201,45 @@ async function ratePost(req, res) {
 
 router.put('/rate', tryCatch(ratePost));
 
+// GET - View a post \\
+async function viewPostLimitComments(req, res){
+    
+    const targetPost = await PostModel.findOne({_id: req.params.id});
+    const totalComments = targetPost.comments.length;
+    const pageResults = 5;
+    const page = req.body.page || 1;
+
+    
+    if(targetPost === null){
+        return res.json({
+            message: 'That post does not exist'
+        });
+    }
+    // Only populate within the limit. Adtnl reqs will skip what has already been gotten
+    // and push them into the state on the front end
+    else {
+        PostModel.findById(req.params.id)
+        .populate([
+            {
+                path: 'comments',
+                options: {
+                    skip: (pageResults * page) - pageResults,
+                    limit: pageResults
+                }
+            }
+        ])
+        .populate({path:'hive', select:'title'})
+        .exec(function (err, post) {
+            res.json({
+                feedback: post.serialize(),
+                currentPage: page,
+                totalComments: totalComments,
+                pages: Math.ceil(totalComments / pageResults)
+            })
+        })
+    }
+}
+
+router.get('/test/:id', tryCatch(viewPostLimitComments));
+
 module.exports = router;
