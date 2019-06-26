@@ -36,7 +36,8 @@ UserSchema.methods.serialize = function () {
         username: this.username,
         comments: this.comments,
         posts: this.posts,
-        hives: this.hives
+        hives: this.hives,
+        ratedPosts: this.ratedPosts
     }
 }
 
