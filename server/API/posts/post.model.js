@@ -52,6 +52,7 @@ PostSchema.methods.serialize = function () {
         comments: this.comments,
         tags: this.tags,
         ratings: this.ratings,
+        raters: this.raters,
         createdAt: this.createdAt
     }
 }
