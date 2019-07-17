@@ -225,6 +225,9 @@ async function viewPostLimitComments(req, res){
                 options: {
                     skip: (pageResults * page) - pageResults,
                     limit: pageResults
+                },
+                populate: {
+                    path: 'replies'
                 }
             }
         ])
