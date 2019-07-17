@@ -105,6 +105,6 @@ async function viewComment(req, res){
     }
 }
 
-router.get('/view', tryCatch(viewComment));
+router.post('/view', tryCatch(viewComment));
 
 module.exports = router;
