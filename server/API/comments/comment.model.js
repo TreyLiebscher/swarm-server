@@ -14,7 +14,9 @@ const CommentSchema = new mongoose.Schema({
         required: true
     },
     replies:[{type: mongoose.Schema.ObjectId, ref : 'CommentModel'}],
-    user: [{type : mongoose.Schema.ObjectId, ref : 'UserModel'}]
+    user: [{type : mongoose.Schema.ObjectId, ref : 'UserModel'}],
+    ratings: [{type: Number, required: false}],
+    raters: [{type: mongoose.Schema.ObjectId, ref: 'UserModel'}],
 }, {
     timestamps: {
         createdAt: 'createdAt'
@@ -22,12 +24,50 @@ const CommentSchema = new mongoose.Schema({
 });
 
 CommentSchema.methods.serialize = function () {
+
+    let rating_score;
+
+    if(this.ratings.length === 0){
+        rating_score = 3;
+    } else {
+        rating_score = Math.round(this.ratings.reduce((a, b) => a + b) / this.ratings.length); 
+    }
+
+
+    const reply_score = this.replies.length;
+
+
+    const rating_quantity_score = this.ratings.length;
+    const swarm_score = () => {
+        let result;
+
+        if(rating_score === 5) {
+            result = (reply_score + rating_quantity_score) * 1.075;
+        }
+        else if(rating_score === 4) {
+            result = (reply_score + rating_quantity_score) * 1.05;
+        }
+        else if(rating_score === 3) {
+            result = (reply_score + rating_quantity_score) * 1.00;
+        }
+        else if(rating_score === 2) {
+            result = (reply_score + rating_quantity_score) * .95;
+        }
+        else if(rating_score === 1) {
+            result = (reply_score + rating_quantity_score) * .80;
+        }
+        return result;
+    }
+
     return {
-        id: this._id,
+        _id: this._id,
         body: this.body,
         author: this.author,
         user: this.user,
-        replies: this.replies
+        replies: this.replies,
+        ratings: this.ratings,
+        raters: this.raters,
+        score: swarm_score()
     }
 }
 
