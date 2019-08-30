@@ -31,6 +31,7 @@ async function createComment(req, res){
         newComment.save();
         
         PostModel.findById(req.body.post, function(err, post){
+            console.log('kiwi', post.comments.length)
             post.comments.push(newComment);
             post.save(function(err) {
                 PostModel.findById(req.body.post)
@@ -51,7 +52,7 @@ router.post('/create', tryCatch(createComment));
 async function commentReply(req, res){
     const targetComment = await CommentModel.findOne({_id: req.body.comment});
     const commentAuthor = await UserModel.findOne({_id: req.body.user});
-
+    console.log(targetComment)
     if(targetComment === null){
         return res.json({
             message: 'This comment does not exist'
@@ -106,5 +107,68 @@ async function viewComment(req, res){
 }
 
 router.post('/view', tryCatch(viewComment));
+
+// PUT - Rate a Comment \\
+async function rateComment(req, res) {
+    const existingRecord = await CommentModel.findById(req.body.comment)
+    const rater = await UserModel.findById(req.body.user);
+    let found;
+    console.log('kiwi exist rec', existingRecord)
+
+
+    if(existingRecord.raters.length === 0){
+        found === false;
+    } else {
+        await existingRecord.raters.map((id) => {
+            if(id == rater.id){
+                found = true;
+            } else {
+                found = false;
+            }
+        });
+    }
+ 
+    if (existingRecord === null) {
+        return res.status(404).json({
+            message: 'NOT_FOUND'
+        })
+    }
+    if (found === true){
+        return res.json({
+            message: 'You have already rated this comment'
+        });
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate({
+        '_id': req.body.user
+    }, {
+            $push: {ratedComments: req.body.comment}
+        }, {
+            new: true
+    });
+
+    const updatedRecord = await CommentModel.findByIdAndUpdate({
+        '_id': req.body.comment
+    }, {
+            $push: {ratings: req.body.rating, raters: req.body.user}
+        }, {
+            new: true
+        })
+
+    PostModel.findById(req.body.post)
+    .populate('comments')
+    .exec(function(err, post) {
+        res.json({
+            post: post.serialize()
+        })
+    })
+
+    // res.json({
+    //     comment: updatedRecord.serialize(),
+    //     message: 'Comment rated successfully'
+    // })
+}
+
+router.put('/rate', tryCatch(rateComment));
 
 module.exports = router;
