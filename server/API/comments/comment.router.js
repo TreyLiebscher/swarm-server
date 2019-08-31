@@ -156,7 +156,14 @@ async function rateComment(req, res) {
         })
 
     PostModel.findById(req.body.post)
-    .populate('comments')
+    .populate([
+        {
+            path: 'comments',
+            populate: {
+                path: 'replies'
+            }
+        }
+    ])
     .exec(function(err, post) {
         res.json({
             post: post.serialize()
