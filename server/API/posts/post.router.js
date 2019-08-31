@@ -192,7 +192,7 @@ async function ratePost(req, res) {
             $push: {ratings: req.body.rating, raters: req.body.user}
         }, {
             new: true
-        })
+        }).populate('comments')
     res.json({
         post: updatedRecord.serialize(),
         message: 'Post rated successfully'
