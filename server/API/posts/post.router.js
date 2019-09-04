@@ -223,6 +223,7 @@ async function viewPostLimitComments(req, res){
             {
                 path: 'comments',
                 options: {
+                    sort: {score: -1},
                     skip: (pageResults * page) - pageResults,
                     limit: pageResults
                 },

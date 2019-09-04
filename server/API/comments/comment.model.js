@@ -13,31 +13,36 @@ const CommentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    post: {
+        type: String,
+        required: true
+    },
     replies:[{type: mongoose.Schema.ObjectId, ref : 'CommentModel'}],
     user: [{type : mongoose.Schema.ObjectId, ref : 'UserModel'}],
     ratings: [{type: Number, required: false}],
     raters: [{type: mongoose.Schema.ObjectId, ref: 'UserModel'}],
+    score: {
+        type: Number
+    }
 }, {
     timestamps: {
         createdAt: 'createdAt'
     }
 });
 
-CommentSchema.methods.serialize = function () {
+CommentSchema.pre('save', function(next){
+
 
     let rating_score;
-
     if(this.ratings.length === 0){
         rating_score = 3;
     } else {
         rating_score = Math.round(this.ratings.reduce((a, b) => a + b) / this.ratings.length); 
     }
 
-
     const reply_score = this.replies.length;
-
-
     const rating_quantity_score = this.ratings.length;
+
     const swarm_score = () => {
         let result;
 
@@ -59,15 +64,23 @@ CommentSchema.methods.serialize = function () {
         return result;
     }
 
+    this.score = swarm_score();
+
+  next();   
+});
+
+CommentSchema.methods.serialize = function () {
+
     return {
         _id: this._id,
+        post: this.post,
         body: this.body,
         author: this.author,
         user: this.user,
         replies: this.replies,
         ratings: this.ratings,
         raters: this.raters,
-        score: swarm_score()
+        score: this.score
     }
 }
 
