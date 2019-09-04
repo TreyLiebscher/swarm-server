@@ -15,6 +15,10 @@ async function createComment(req, res){
     const targetPost = await PostModel.findOne({_id: req.body.post});
     const commentAuthor = await UserModel.findOne({_id: req.body.user});
 
+    const totalComments = targetPost.comments.length;
+    const pageResults = 5;
+    const page = req.body.page || 1;
+
     if(targetPost === null){
         return res.json({
             message: 'This post does not exist'
@@ -31,14 +35,28 @@ async function createComment(req, res){
         newComment.save();
         
         PostModel.findById(req.body.post, function(err, post){
-            console.log('kiwi', post.comments.length)
             post.comments.push(newComment);
             post.save(function(err) {
                 PostModel.findById(req.body.post)
-                .populate('comments')
+                .populate([
+                    {
+                        path: 'comments',
+                        options: {
+                            sort: {score: -1},
+                            skip: (pageResults * page) - pageResults,
+                            limit: pageResults
+                        },
+                        populate: {
+                            path: 'replies'
+                        }
+                    }
+                ])
                 .exec(function(err, post) {
                     res.json({
-                        userFeedback: post.serialize()
+                        userFeedback: post.serialize(),
+                        currentPage: Math.ceil(totalComments / pageResults),
+                        totalComments: totalComments,
+                        pages: Math.ceil(totalComments / pageResults)
                     })
                 })
             })
@@ -52,7 +70,8 @@ router.post('/create', tryCatch(createComment));
 async function commentReply(req, res){
     const targetComment = await CommentModel.findOne({_id: req.body.comment});
     const commentAuthor = await UserModel.findOne({_id: req.body.user});
-    console.log(targetComment)
+    const targetPost = await PostModel.findOne({_id: req.body.homePost});
+
     if(targetComment === null){
         return res.json({
             message: 'This comment does not exist'
@@ -61,7 +80,7 @@ async function commentReply(req, res){
 
     else {
         let newReply = new CommentModel({
-            post: req.body.post,
+            post: req.body.comment,
             user: req.body.user,
             body: req.body.body,
             author: commentAuthor.username
@@ -71,11 +90,21 @@ async function commentReply(req, res){
         CommentModel.findById(req.body.comment, function(err, comment){
             comment.replies.push(newReply);
             comment.save(function(err) {
-                CommentModel.findById(req.body.comment)
-                .populate('replies')
-                .exec(function(err, comment){
+                PostModel.findById(req.body.homePost)
+                .populate([
+                    {
+                        path: 'comments',
+                        options: {
+                            sort: {score: -1},
+                        },
+                        populate: {
+                            path: 'replies'
+                        }
+                    }
+                ])
+                .exec(function (err, post) {
                     res.json({
-                        feedback: comment.serialize()
+                        feedback: post.serialize()
                     })
                 })
             })
@@ -113,8 +142,6 @@ async function rateComment(req, res) {
     const existingRecord = await CommentModel.findById(req.body.comment)
     const rater = await UserModel.findById(req.body.user);
     let found;
-    console.log('kiwi exist rec', existingRecord)
-
 
     if(existingRecord.raters.length === 0){
         found === false;
@@ -154,11 +181,15 @@ async function rateComment(req, res) {
         }, {
             new: true
         })
+    updatedRecord.save()
 
     PostModel.findById(req.body.post)
     .populate([
         {
             path: 'comments',
+            options: {
+                sort: {score: -1}
+            },
             populate: {
                 path: 'replies'
             }
@@ -169,11 +200,6 @@ async function rateComment(req, res) {
             post: post.serialize()
         })
     })
-
-    // res.json({
-    //     comment: updatedRecord.serialize(),
-    //     message: 'Comment rated successfully'
-    // })
 }
 
 router.put('/rate', tryCatch(rateComment));
