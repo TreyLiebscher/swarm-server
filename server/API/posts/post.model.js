@@ -42,9 +42,6 @@ const PostSchema = new mongoose.Schema({
 
 PostSchema.methods.serialize = function () {
 
-
-    const formatted_comments = this.comments.map((comment) => comment.serialize()) 
-    const sorted_comments = formatted_comments.sort((a, b) => (a.score < b.score) ? 1 : -1);
     return {
         id: this._id,
         hive: this.hive,
@@ -53,7 +50,7 @@ PostSchema.methods.serialize = function () {
         link: this.link,
         body: this.body,
         image: this.image,
-        comments: sorted_comments,
+        comments: this.comments,
         tags: this.tags,
         ratings: this.ratings,
         raters: this.raters,
