@@ -47,19 +47,19 @@ CommentSchema.pre('save', function(next){
         let result;
 
         if(rating_score === 5) {
-            result = (reply_score + rating_quantity_score) * 1.075;
+            result = ((reply_score * 1.075) + (rating_quantity_score * 0.25)) * 1.075;
         }
         else if(rating_score === 4) {
-            result = (reply_score + rating_quantity_score) * 1.05;
+            result = ((reply_score * 1.05) + (rating_quantity_score * 0.25)) * 1.05;
         }
         else if(rating_score === 3) {
-            result = (reply_score + rating_quantity_score) * 1.00;
+            result = ((reply_score * 1) + (rating_quantity_score * 0.25)) * 1.00;
         }
         else if(rating_score === 2) {
-            result = (reply_score + rating_quantity_score) * .95;
+            result = ((reply_score * .95) + (rating_quantity_score * 0.25)) * .95;
         }
         else if(rating_score === 1) {
-            result = (reply_score + rating_quantity_score) * .80;
+            result = ((reply_score * .80) + (rating_quantity_score * 0.25)) * .80;
         }
         return result;
     }
