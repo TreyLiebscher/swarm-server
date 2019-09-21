@@ -19,6 +19,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    notifications: [{type : mongoose.Schema.ObjectId, ref : 'NotificationModel'}],
     comments: [{type : mongoose.Schema.ObjectId, ref : 'CommentModel'}],
     posts: [{type : mongoose.Schema.ObjectId, ref : 'PostModel'}],
     hives: [{type : mongoose.Schema.ObjectId, ref : 'HiveModel'}],
@@ -39,7 +40,8 @@ UserSchema.methods.serialize = function () {
         posts: this.posts,
         hives: this.hives,
         ratedPosts: this.ratedPosts,
-        ratedComments: this.ratedComments
+        ratedComments: this.ratedComments,
+        notifications: this.notifications
     }
 }
 

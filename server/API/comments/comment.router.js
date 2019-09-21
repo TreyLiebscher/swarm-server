@@ -7,6 +7,7 @@ const { UserModel } = require('../users/user.model');
 const { HiveModel } = require('../hives/hive.model');
 const { PostModel } = require('../posts/post.model');
 const { CommentModel } = require('./comment.model');
+const { NotificationModel } = require('../notifications/notification.model');
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ const router = express.Router();
 async function createComment(req, res){
     const targetPost = await PostModel.findOne({_id: req.body.post});
     const commentAuthor = await UserModel.findOne({_id: req.body.user});
-
+    console.log('kiwi', targetPost)
     const totalComments = targetPost.comments.length;
     const pageResults = 5;
     const page = req.body.page || 1;
@@ -33,6 +34,20 @@ async function createComment(req, res){
             author: commentAuthor.username
         });
         newComment.save();
+
+        let newNotification = new NotificationModel({
+            post: req.body.post,
+            comment: newComment,
+            responder: req.body.user,
+            message: `${commentAuthor.username} commented on your post`,
+            type: 'NewComment'
+        });
+        newNotification.save();
+
+        UserModel.findOne({username: targetPost.author}, function(err, user){
+            user.notifications.push(newNotification);
+            user.save();
+        });
         
         PostModel.findById(req.body.post, function(err, post){
             post.comments.push(newComment);
