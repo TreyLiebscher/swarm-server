@@ -211,6 +211,14 @@ async function getUserProfile(req, res) {
         .populate('hives')
         .populate('posts')
         .populate('comments')
+        .populate(
+            {
+                path: 'notifications',
+                populate: {
+                    path: 'comment'
+                }
+            }
+        )
         .exec((err, user) => {
             res.json({
                 profile: user.serialize()
@@ -221,6 +229,29 @@ async function getUserProfile(req, res) {
 
 router.get('/profile/home', jwtAuth, tryCatch(getUserProfile));
 //------------------------------------------------------------------------------\\
+
+// POST - Clear Notification \\
+async function clearNotification(req, res) {
+    const record = await NotificationModel.findOne({id: req.notification});
+    const user = await UserModel.findOne({username: req.user.username});
+    if(record === null){
+        res.json({
+            message: 'There was an error'
+        })
+    }
+
+    UserModel.findOne({username: req.user.username}, function(err, user){
+        user.notifications({id: req.notification}).remove()
+        user.save()
+    })
+        
+}
+
+router.post('/clear-notification', jwtAuth, tryCatch(clearNotification));
+
+
+//------------------------------------------------------------------------------\\
+
 
 
 module.exports = router;
