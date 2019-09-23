@@ -6,6 +6,10 @@ const NotificationSchema = new mongoose.Schema({
     post: {
         type: mongoose.Schema.ObjectId, ref: 'PostModel'
     },
+    postTitle: {
+        type: String,
+        required: false
+    },
     comment: {
         type: mongoose.Schema.ObjectId, ref: 'CommentModel'
     },

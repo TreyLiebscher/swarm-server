@@ -13,9 +13,9 @@ const router = express.Router();
 
 // POST - Create a comment within a post \\
 async function createComment(req, res){
-    const targetPost = await PostModel.findOne({_id: req.body.post});
+    const targetPost = await PostModel.findOne({_id: req.body.post.id});
     const commentAuthor = await UserModel.findOne({_id: req.body.user});
-    console.log('kiwi', targetPost)
+    console.log('kiwi', req.body.post)
     const totalComments = targetPost.comments.length;
     const pageResults = 5;
     const page = req.body.page || 1;
@@ -28,7 +28,7 @@ async function createComment(req, res){
 
     else {
         let newComment = new CommentModel({
-            post: req.body.post,
+            post: req.body.post.id,
             user: req.body.user,
             body: req.body.body,
             author: commentAuthor.username
@@ -36,10 +36,11 @@ async function createComment(req, res){
         newComment.save();
 
         let newNotification = new NotificationModel({
-            post: req.body.post,
+            post: req.body.post.id,
+            postTitle: req.body.post.title,
             comment: newComment,
             responder: req.body.user,
-            message: `${commentAuthor.username} commented on your post`,
+            message: `${commentAuthor.username} commented on`,
             type: 'NewComment'
         });
         newNotification.save();
@@ -49,10 +50,10 @@ async function createComment(req, res){
             user.save();
         });
         
-        PostModel.findById(req.body.post, function(err, post){
+        PostModel.findById(req.body.post.id, function(err, post){
             post.comments.push(newComment);
             post.save(function(err) {
-                PostModel.findById(req.body.post)
+                PostModel.findById(req.body.post.id)
                 .populate([
                     {
                         path: 'comments',
