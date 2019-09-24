@@ -11,6 +11,7 @@ const config = require('../../../config');
 const { localStrategy, jwtStrategy } = require('../../../auth/strategies');
 
 const { UserModel } = require('./user.model');
+const { NotificationModel } = require('../notifications/notification.model');
 
 passport.use(localStrategy);
 passport.use(jwtStrategy);
@@ -232,19 +233,39 @@ router.get('/profile/home', jwtAuth, tryCatch(getUserProfile));
 
 // POST - Clear Notification \\
 async function clearNotification(req, res) {
-    const record = await NotificationModel.findOne({id: req.notification});
-    const user = await UserModel.findOne({username: req.user.username});
-    if(record === null){
-        res.json({
-            message: 'There was an error'
-        })
+
+    const removeItem = (arr, item) => {
+        const index = arr.indexOf(item);
+
+        if (index !== -1) {
+            arr.splice(index, 1);
+        } else {
+            return;
+        }
     }
 
-    UserModel.findOne({username: req.user.username}, function(err, user){
-        user.notifications({id: req.notification}).remove()
-        user.save()
+    UserModel.findById(req.body.user.id, function(err, user) {
+        removeItem(user.notifications, req.body.notification._id);
+        user.save(function(err) {
+            UserModel.findById(req.body.user.id)
+            .populate('hives')
+            .populate('posts')
+            .populate('comments')
+            .populate(
+                {
+                    path: 'notifications',
+                    populate: {
+                        path: 'comment'
+                    }
+                }
+            )
+            .exec(function (err, user) {
+                res.json({
+                    profile: user.serialize()
+                })
+            })
+        })
     })
-        
 }
 
 router.post('/clear-notification', jwtAuth, tryCatch(clearNotification));
