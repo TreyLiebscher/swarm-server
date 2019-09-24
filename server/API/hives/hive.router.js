@@ -201,7 +201,10 @@ async function viewHive(req, res){
 
     else {
         HiveModel.findOne({title: req.params.title})
-        .populate('posts')
+        .populate({
+            path: 'posts',
+            options: { sort: {score: -1} }
+          })
         .populate('founder', 'username')
         .exec(function (err, hive) {
             res.json({

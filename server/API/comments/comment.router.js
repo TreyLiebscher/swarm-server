@@ -15,7 +15,6 @@ const router = express.Router();
 async function createComment(req, res){
     const targetPost = await PostModel.findOne({_id: req.body.post.id});
     const commentAuthor = await UserModel.findOne({_id: req.body.user});
-    console.log('kiwi', req.body.post)
     const totalComments = targetPost.comments.length;
     const pageResults = 5;
     const page = req.body.page || 1;
@@ -44,6 +43,11 @@ async function createComment(req, res){
             type: 'NewComment'
         });
         newNotification.save();
+
+        UserModel.findOne({_id: req.body.user}, function(err, user){
+            user.comments.push(newComment);
+            user.save();
+        })
 
         UserModel.findOne({username: targetPost.author}, function(err, user){
             user.notifications.push(newNotification);
@@ -86,8 +90,8 @@ router.post('/create', tryCatch(createComment));
 async function commentReply(req, res){
     const targetComment = await CommentModel.findOne({_id: req.body.comment});
     const commentAuthor = await UserModel.findOne({_id: req.body.user});
-    const targetPost = await PostModel.findOne({_id: req.body.homePost});
-
+    const targetPost = await PostModel.findOne({_id: req.body.homePost.id});
+    console.log(targetComment.user[0])
     if(targetComment === null){
         return res.json({
             message: 'This comment does not exist'
@@ -103,10 +107,25 @@ async function commentReply(req, res){
         })
         newReply.save();
 
+        let newNotification = new NotificationModel({
+            post: req.body.homePost.id,
+            postTitle: req.body.homePost.title,
+            comment: newReply,
+            responder: req.body.user,
+            message: `${commentAuthor.username} replied to your comment on`,
+            type: 'NewReply'
+        });
+        newNotification.save();
+
+        UserModel.findOne({_id: targetComment.user[0]}, function(err, user){
+            user.notifications.push(newNotification);
+            user.save();
+        });
+
         CommentModel.findById(req.body.comment, function(err, comment){
             comment.replies.push(newReply);
             comment.save(function(err) {
-                PostModel.findById(req.body.homePost)
+                PostModel.findOne({_id: req.body.homePost.id})
                 .populate([
                     {
                         path: 'comments',
