@@ -25,6 +25,7 @@ const UserSchema = new mongoose.Schema({
     hives: [{type : mongoose.Schema.ObjectId, ref : 'HiveModel'}],
     ratedPosts: [{type : mongoose.Schema.ObjectId, ref : 'PostModel'}],
     ratedComments: [{type : mongoose.Schema.ObjectId, ref : 'CommentModel'}],
+    conversations: [{type : mongoose.Schema.ObjectId, ref : 'ConversationModel'}]
 }, {
     timestamps: {
         createdAt: 'createdAt'
@@ -41,7 +42,8 @@ UserSchema.methods.serialize = function () {
         hives: this.hives,
         ratedPosts: this.ratedPosts,
         ratedComments: this.ratedComments,
-        notifications: this.notifications
+        notifications: this.notifications,
+        conversations: this.conversations
     }
 }
 
