@@ -12,6 +12,8 @@ const { localStrategy, jwtStrategy } = require('../../../auth/strategies');
 
 const { UserModel } = require('./user.model');
 const { NotificationModel } = require('../notifications/notification.model');
+const { ConversationModel } = require('../messages/conversation.model');
+const { MessageModel } = require('../messages/message.model');
 
 passport.use(localStrategy);
 passport.use(jwtStrategy);
@@ -220,6 +222,14 @@ async function getUserProfile(req, res) {
                 }
             }
         )
+        .populate(
+            {
+                path: 'conversations',
+                populate: {
+                    path: 'messages users'
+                }
+            }
+        )
         .exec((err, user) => {
             res.json({
                 profile: user.serialize()
@@ -229,6 +239,31 @@ async function getUserProfile(req, res) {
 }
 
 router.get('/profile/home', jwtAuth, tryCatch(getUserProfile));
+//------------------------------------------------------------------------------\\
+
+// GET - Public Profile \\ 
+async function getPublicUserProfile(req, res) {
+    const record = await UserModel.findOne({username: req.params.username})
+        .populate('hives')
+        .populate('posts')
+        .populate('comments')
+        .populate(
+            {
+                path: 'notifications',
+                populate: {
+                    path: 'comment'
+                }
+            }
+        )
+        .exec((err, user) => {
+            res.json({
+                profile: user.serialize()
+            })
+        });
+        
+}
+
+router.get('/:username', tryCatch(getPublicUserProfile));
 //------------------------------------------------------------------------------\\
 
 // POST - Clear Notification \\
@@ -269,6 +304,129 @@ async function clearNotification(req, res) {
 }
 
 router.post('/clear-notification', jwtAuth, tryCatch(clearNotification));
+
+
+//------------------------------------------------------------------------------\\
+
+// POST - Send a message \\
+async function sendMessage(req, res) {
+    // No conversation exists to send the message to
+    const test = await ConversationModel.find({users: [req.body.sender, req.body.receiver]})
+    console.log('kiwi', test);
+    
+    if(!(req.body.conversation)){
+        console.log('NEW CONVO')
+        let newConversation = new ConversationModel({
+            users: req.body.users
+        });
+
+        let newMessage = new MessageModel({
+            user: req.body.sender,
+            body: req.body.body,
+            conversation: newConversation  
+        })
+        newMessage.save();
+
+        newConversation.messages.push(newMessage);
+        newConversation.save();
+        
+        UserModel.findById(req.body.receiver, function(err, user){
+            user.conversations.push(newConversation);
+            user.save();
+        });
+
+        const updatedUser = await UserModel.findByIdAndUpdate({
+            '_id': req.body.sender
+        }, {
+                $push: {conversations: newConversation}
+            }, {
+                new: true
+            })
+            .populate('hives')
+            .populate('conversations')
+            .populate('posts')
+            .populate('comments')
+            .populate(
+                {
+                    path: 'notifications',
+                    populate: {
+                        path: 'comment'
+                    }
+                }
+            )
+
+        updatedUser.save();
+
+
+        // UserModel.findById(req.body.sender, function(err, user){
+        //     user.conversations.push(newConversation);
+        //     user.save(function(err, user){
+        //         UserModel.findOne(user)
+        //         .populate('hives')
+        //         .populate('conversations')
+        //         .populate('posts')
+        //         .populate('comments')
+        //         .populate(
+        //             {
+        //                 path: 'notifications',
+        //                 populate: {
+        //                     path: 'comment'
+        //                 }
+        //             }
+        //         )
+        //         .exec(function (err, user) {
+        //             res.json({
+        //                 profile: user.serialize()
+        //             })
+        //         })
+        //     });
+        // })
+
+        res.json({
+            profile: updatedUser.serialize()
+        })
+
+
+    } 
+    else {
+        console.log('EXISTING CONVO')
+        const targetConversation = await ConversationModel.findById(req.body.conversation);
+        let newMessage = new MessageModel({
+            user: req.body.sender,
+            body: req.body.body,
+            conversation: targetConversation.id  
+        })
+        newMessage.save();
+
+        targetConversation.messages.push(newMessage);
+        targetConversation.save();
+
+        UserModel.findById(req.body.sender)
+        .populate('hives')
+        .populate('conversations')
+        .populate('posts')
+        .populate('comments')
+        .populate(
+            {
+                path: 'notifications',
+                populate: {
+                    path: 'comment'
+                }
+            }
+        )
+        .exec(function (err, user) {
+            res.json({
+                profile: user.serialize()
+            })
+        })
+
+    }
+
+
+}
+
+router.post('/send', tryCatch(sendMessage));
+
 
 
 //------------------------------------------------------------------------------\\
