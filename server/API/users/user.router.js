@@ -312,10 +312,10 @@ router.post('/clear-notification', jwtAuth, tryCatch(clearNotification));
 async function sendMessage(req, res) {
     // No conversation exists to send the message to
     const test = await ConversationModel.find({users: [req.body.sender, req.body.receiver]})
-    console.log('kiwi', test);
+    const test2 = await ConversationModel.find({users: {$all: [req.body.sender, req.body.receiver]}})
+
     
-    if(!(req.body.conversation)){
-        console.log('NEW CONVO')
+    if(test.length === 0 && test2.length === 0){
         let newConversation = new ConversationModel({
             users: req.body.users
         });
@@ -357,31 +357,6 @@ async function sendMessage(req, res) {
 
         updatedUser.save();
 
-
-        // UserModel.findById(req.body.sender, function(err, user){
-        //     user.conversations.push(newConversation);
-        //     user.save(function(err, user){
-        //         UserModel.findOne(user)
-        //         .populate('hives')
-        //         .populate('conversations')
-        //         .populate('posts')
-        //         .populate('comments')
-        //         .populate(
-        //             {
-        //                 path: 'notifications',
-        //                 populate: {
-        //                     path: 'comment'
-        //                 }
-        //             }
-        //         )
-        //         .exec(function (err, user) {
-        //             res.json({
-        //                 profile: user.serialize()
-        //             })
-        //         })
-        //     });
-        // })
-
         res.json({
             profile: updatedUser.serialize()
         })
@@ -389,17 +364,16 @@ async function sendMessage(req, res) {
 
     } 
     else {
-        console.log('EXISTING CONVO')
-        const targetConversation = await ConversationModel.findById(req.body.conversation);
+        const targetConversation = await ConversationModel.find({users: {$all: [req.body.sender, req.body.receiver]}})
         let newMessage = new MessageModel({
             user: req.body.sender,
             body: req.body.body,
-            conversation: targetConversation.id  
+            conversation: targetConversation[0].id  
         })
         newMessage.save();
 
-        targetConversation.messages.push(newMessage);
-        targetConversation.save();
+        targetConversation[0].messages.push(newMessage);
+        targetConversation[0].save();
 
         UserModel.findById(req.body.sender)
         .populate('hives')
