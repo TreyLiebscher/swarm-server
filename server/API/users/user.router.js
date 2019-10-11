@@ -294,6 +294,14 @@ async function clearNotification(req, res) {
                     }
                 }
             )
+            .populate(
+                {
+                    path: 'conversations',
+                    populate: {
+                        path: 'messages users'
+                    }
+                }
+            )
             .exec(function (err, user) {
                 res.json({
                     profile: user.serialize()
@@ -343,7 +351,6 @@ async function sendMessage(req, res) {
                 new: true
             })
             .populate('hives')
-            .populate('conversations')
             .populate('posts')
             .populate('comments')
             .populate(
@@ -351,6 +358,14 @@ async function sendMessage(req, res) {
                     path: 'notifications',
                     populate: {
                         path: 'comment'
+                    }
+                }
+            )
+            .populate(
+                {
+                    path: 'conversations',
+                    populate: {
+                        path: 'messages users'
                     }
                 }
             )
@@ -377,7 +392,6 @@ async function sendMessage(req, res) {
 
         UserModel.findById(req.body.sender)
         .populate('hives')
-        .populate('conversations')
         .populate('posts')
         .populate('comments')
         .populate(
@@ -385,6 +399,14 @@ async function sendMessage(req, res) {
                 path: 'notifications',
                 populate: {
                     path: 'comment'
+                }
+            }
+        )
+        .populate(
+            {
+                path: 'conversations',
+                populate: {
+                    path: 'messages users'
                 }
             }
         )
