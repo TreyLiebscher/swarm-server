@@ -154,8 +154,6 @@ router.post('/user/createUser', tryCatch(createNewUser));
 
 // POST - Log In \\
 router.post('/login', localAuth, (req, res) => {
-    console.log('Login attempt successful', req.user)
-
     const authToken = createAuthToken(req.user.serialize());
     const username = req.user.serialize().username;
     res.json({
@@ -387,32 +385,17 @@ async function sendMessage(req, res) {
         })
         newMessage.save();
 
-        targetConversation[0].messages.push(newMessage);
-        targetConversation[0].save();
-
-        UserModel.findById(req.body.sender)
-        .populate('hives')
-        .populate('posts')
-        .populate('comments')
-        .populate(
-            {
-                path: 'notifications',
-                populate: {
-                    path: 'comment'
-                }
-            }
-        )
-        .populate(
-            {
-                path: 'conversations',
-                populate: {
-                    path: 'messages users'
-                }
-            }
-        )
-        .exec(function (err, user) {
+        const updatedConversation = await ConversationModel.findByIdAndUpdate({
+            '_id': targetConversation[0].id
+        }, {
+            $push: {messages: newMessage}
+        }, {
+            new: true
+        })
+        .populate({path: 'messages users'})
+        .exec(function (err, conversation) {
             res.json({
-                profile: user.serialize()
+                conversation: conversation
             })
         })
 
@@ -422,11 +405,30 @@ async function sendMessage(req, res) {
 }
 
 router.post('/send', tryCatch(sendMessage));
-
-
-
 //------------------------------------------------------------------------------\\
 
 
+// POST - View a conversation \\
+async function getConversation(req, res){
+    const targetConversation = ConversationModel.findOne({_id: req.params.id});
+    if(targetConversation === null){
+        return res.json({
+            message: 'That conversation does not exist'
+        });
+    }
 
+    else {
+        ConversationModel.findById(req.params.id)
+        .populate({path: 'messages users'})
+        .exec(function (err, conversation){
+            res.json({
+                conversation: conversation
+            })
+        })
+    }
+
+}
+
+router.post('/conversation/:id', jwtAuth, tryCatch(getConversation));
+//------------------------------------------------------------------------------\\
 module.exports = router;
