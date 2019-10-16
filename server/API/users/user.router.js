@@ -384,6 +384,21 @@ async function sendMessage(req, res) {
             conversation: targetConversation[0].id  
         })
         newMessage.save();
+        const sender = await UserModel.findOne({_id: req.body.sender});
+
+        let newNotification = new NotificationModel({
+            responder: req.body.sender,
+            post: targetConversation[0].id,
+            message: `${sender.username} sent you a message`,
+            type: 'NewMessage'
+        });
+        newNotification.save();
+
+        UserModel.findOne({_id: req.body.receiver}, function(err, user){
+            user.notifications.push(newNotification);
+            user.save();
+        });
+
 
         const updatedConversation = await ConversationModel.findByIdAndUpdate({
             '_id': targetConversation[0].id
