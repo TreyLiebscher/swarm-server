@@ -1,7 +1,11 @@
 const express = require('express');
-
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
 const tryCatch = require('../../helpers').expressTryCatchWrapper;
 const getFields = require('../../helpers').getFieldsFromRequest;
+
+const { localStrategy, jwtStrategy } = require('../../../auth/strategies');
+
 
 const { UserModel } = require('../users/user.model');
 const { HiveModel } = require('../hives/hive.model');
@@ -9,7 +13,14 @@ const { PostModel } = require('../posts/post.model');
 const { CommentModel } = require('./comment.model');
 const { NotificationModel } = require('../notifications/notification.model');
 
+passport.use(localStrategy);
+passport.use(jwtStrategy);
+
 const router = express.Router();
+
+const jwtAuth = passport.authenticate('jwt', {
+    session: false
+});
 
 // POST - Create a comment within a post \\
 async function createComment(req, res){
@@ -88,10 +99,15 @@ router.post('/create', tryCatch(createComment));
 
 // POST - Create a comment reply \\
 async function commentReply(req, res){
+    let homePost;
+    if(!(req.body.homePost.id)){
+        homePost = req.body.homePost._id;
+    } else {
+        homePost = req.body.homePost.id;
+    }
     const targetComment = await CommentModel.findOne({_id: req.body.comment});
-    const commentAuthor = await UserModel.findOne({_id: req.body.user});
-    const targetPost = await PostModel.findOne({_id: req.body.homePost.id});
-    console.log(targetComment.user[0])
+    const commentAuthor = await UserModel.findOne({_id: req.user.id});
+    const targetPost = await PostModel.findOne({_id: homePost});
     if(targetComment === null){
         return res.json({
             message: 'This comment does not exist'
@@ -101,17 +117,17 @@ async function commentReply(req, res){
     else {
         let newReply = new CommentModel({
             post: req.body.comment,
-            user: req.body.user,
+            user: req.user.id,
             body: req.body.body,
             author: commentAuthor.username
         })
         newReply.save();
 
         let newNotification = new NotificationModel({
-            post: req.body.homePost.id,
+            post: homePost,
             postTitle: req.body.homePost.title,
             comment: newReply,
-            responder: req.body.user,
+            responder: req.user.id,
             message: `${commentAuthor.username} replied to your comment on`,
             type: 'NewReply'
         });
@@ -125,21 +141,12 @@ async function commentReply(req, res){
         CommentModel.findById(req.body.comment, function(err, comment){
             comment.replies.push(newReply);
             comment.save(function(err) {
-                PostModel.findOne({_id: req.body.homePost.id})
-                .populate([
-                    {
-                        path: 'comments',
-                        options: {
-                            sort: {score: -1},
-                        },
-                        populate: {
-                            path: 'replies'
-                        }
-                    }
-                ])
-                .exec(function (err, post) {
+                CommentModel.findById(req.body.comment)
+                .populate('post')
+                .populate('replies')
+                .exec(function (err, comment) {
                     res.json({
-                        feedback: post.serialize()
+                        feedback: comment
                     })
                 })
             })
@@ -147,12 +154,11 @@ async function commentReply(req, res){
     }
 }
 
-router.post('/reply', tryCatch(commentReply));
+router.post('/reply', jwtAuth, tryCatch(commentReply));
 
 // GET - View a comment + replies \\
 async function viewComment(req, res){
-    const targetComment = CommentModel.findOne({_id: req.body.comment});
-
+    const targetComment = CommentModel.findOne({_id: req.params.id});
     if(targetComment === null){
         return res.json({
             message: 'That comment does not exist'
@@ -160,17 +166,18 @@ async function viewComment(req, res){
     }
 
     else {
-        CommentModel.findById(req.body.comment)
+        CommentModel.findById(req.params.id)
+        .populate('post')
         .populate('replies')
         .exec(function (err, comment) {
             res.json({
-                feedback: comment.serialize()
+                feedback: comment
             })
         })
     }
 }
 
-router.post('/view', tryCatch(viewComment));
+router.get('/view/:id', tryCatch(viewComment));
 
 // PUT - Rate a Comment \\
 async function rateComment(req, res) {
