@@ -3,6 +3,7 @@ const passport = require('passport');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const jsonParser = bodyParser.json();
+const mongoose = require('mongoose');
 
 const tryCatch = require('../../helpers').expressTryCatchWrapper;
 const getFields = require('../../helpers').getFieldsFromRequest;
@@ -425,10 +426,12 @@ router.post('/send', tryCatch(sendMessage));
 
 // POST - View a conversation \\
 async function getConversation(req, res){
-    const targetConversation = ConversationModel.findOne({_id: req.params.id});
-    if(targetConversation === null){
-        return res.json({
-            message: 'That conversation does not exist'
+    const targetConversation = await ConversationModel.findOne({_id: req.params.id});
+
+    // Make sure only participants of convo may view it
+    if(targetConversation.users.includes(req.user.id) === false){
+        return res.status(401).json({
+            message: 'No peeky ;)'
         });
     }
 
@@ -436,12 +439,19 @@ async function getConversation(req, res){
         ConversationModel.findById(req.params.id)
         .populate({path: 'messages users'})
         .exec(function (err, conversation){
-            res.json({
-                conversation: conversation
-            })
+            if(err){
+                res.json({
+                    message: 'There was an error'
+                });
+            }
+            else {
+                res.json({
+                    conversation: conversation
+                });
+            }
+
         })
     }
-
 }
 
 router.post('/conversation/:id', jwtAuth, tryCatch(getConversation));
