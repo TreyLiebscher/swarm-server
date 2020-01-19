@@ -9,6 +9,7 @@ const { localStrategy, jwtStrategy } = require('../../../auth/strategies');
 
 const { UserModel } = require('../users/user.model');
 const { HiveModel } = require('./hive.model');
+const { PostModel } = require('../posts/post.model');
 
 passport.use(localStrategy);
 passport.use(jwtStrategy);
@@ -248,5 +249,27 @@ async function updateHive(req, res){
 }
 
 router.put('/update', tryCatch(updateHive));
+
+// DELETE - Delete Hive \\
+async function deleteHive(req, res){
+    const record = await HiveModel.findByIdAndRemove(req.params.id);
+
+    if(record === null){
+        return res.status(404).json({
+            message: 'NOT FOUND'
+        });
+    }
+
+    const postsRecord = await PostModel.find({
+        hive: req.params.id
+    })
+    .remove()
+
+    res.json({
+        message: `"${record.title}" has been deleted`
+    });
+}
+
+router.delete('/delete/:id', tryCatch(deleteHive));
 
 module.exports = router;
