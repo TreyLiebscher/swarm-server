@@ -64,33 +64,34 @@ async function createComment(req, res){
             user.notifications.push(newNotification);
             user.save();
         });
-        
-        PostModel.findById(req.body.post.id, function(err, post){
-            post.comments.push(newComment);
-            post.save(function(err) {
-                PostModel.findById(req.body.post.id)
-                .populate([
-                    {
-                        path: 'comments',
-                        options: {
-                            sort: {score: -1},
-                            skip: (pageResults * page) - pageResults,
-                            limit: pageResults
-                        },
-                        populate: {
-                            path: 'replies'
-                        }
-                    }
-                ])
-                .exec(function(err, post) {
-                    res.json({
-                        userFeedback: post.serialize(),
-                        currentPage: Math.ceil(totalComments / pageResults),
-                        totalComments: totalComments,
-                        pages: Math.ceil(totalComments / pageResults)
-                    })
-                })
-            })
+
+        const updatedRecord = await PostModel.findByIdAndUpdate({
+            '_id': req.body.post.id
+        },
+        {
+            $push: {comments: newComment}
+        },
+        {
+            new: true
+        }).populate([
+            {
+                path: 'comments',
+                options: {
+                    sort: {score: -1},
+                    skip: (pageResults * page) - pageResults,
+                    limit: pageResults
+                },
+                populate: {
+                    path: 'replies'
+                }
+            }
+        ]);
+
+        res.json({
+            userFeedback: updatedRecord.serialize(),
+            currentPage: Math.ceil(totalComments / pageResults),
+            totalComments: totalComments,
+            pages: Math.ceil(totalComments / pageResults)
         })
     }
 }
